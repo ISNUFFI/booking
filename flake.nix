@@ -21,6 +21,8 @@
         export PGHOST="$PROJECT_ROOT/package/db/.pgsocket"
         export PGPORT=11011
 
+        export DATABASE_URL="host=$PGHOST port=$PGPORT dbname=booking"
+
         mkdir -p "$PGDATA" "$PGHOST"
 
         if [ ! -f "$PGDATA/PG_VERSION" ]; then
@@ -31,7 +33,7 @@
         pg_ctl start -D "$PGDATA" -l "$PROJECT_ROOT/package/db/log.txt" -o "-k $PGHOST -p $PGPORT"
         echo "postgres started at $PGHOST:$PGPORT"
 
-        psql -h $PGHOST -p $PGPORT -d postgres -f $PROJECT_ROOT/package/db/src/entrypoint.sql
+        psql -h $PGHOST -p $PGPORT -d postgres -f $PROJECT_ROOT/package/db/src/default.sql
       '';
     };
   };

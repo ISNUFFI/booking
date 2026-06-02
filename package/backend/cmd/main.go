@@ -1,25 +1,34 @@
 package main
 
 import (
-	// "context"
-	"fmt"
+	"context"
+	// "fmt"
 	"log"
 	"net/http"
-	// "os"
+	"os"
 
-	"github.com/gorilla/mux"
 	// "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/middleware"
+
+	"github.com/ISNUFFI/booking/internal/user"
 )
 
 const serverAddr = ":8080"
 
 func main() {
-	r := mux.NewRouter()
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
-	r.HandleFunc("/hello_world", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "Hello world!")
-	}).Methods("GET")
+	pool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal("could not acquire a postgres connection pool: ", err)
+	}
+	defer pool.Close()
+
+	userHandler := user.NewHandler(pool)
+	userHandler.AttachHandlers(r)
 
 	log.Println("Server listening on ", serverAddr)
 	log.Fatal(http.ListenAndServe(serverAddr, r))
