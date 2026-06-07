@@ -16,12 +16,13 @@
 
       shellHook = ''
         export PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-        
         export PGDATA="$PROJECT_ROOT/package/db/.pgdata"
         export PGHOST="$PROJECT_ROOT/package/db/.pgsocket"
         export PGPORT=11011
 
+        export APP_ADDRESS=":8080"
         export DATABASE_URL="host=$PGHOST port=$PGPORT dbname=booking"
+        export JWT_SECRET="veryveryveryveryveryveryveryveryveryverylongsecret"
 
         mkdir -p "$PGDATA" "$PGHOST"
 

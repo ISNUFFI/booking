@@ -19,17 +19,8 @@ func NewRepo(pool *pgxpool.Pool) Repo {
 	}
 }
 
-func (r *Repo) Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error) {
-	conn, err := r.pool.Acquire(context.Background())
-	if err != nil {
-		return pgconn.CommandTag{}, err
-	}
-
-	return conn.Exec(ctx, query, args...)
-}
-
 func (r *Repo) CreateUser(ctx context.Context, email, hash string) error {
-	_, err := r.Exec(
+	_, err := r.pool.Exec(
 		ctx,
 		"INSERT INTO users(email, password_hash) VALUES ($1, $2)",
 		email, hash,
@@ -43,4 +34,25 @@ func (r *Repo) CreateUser(ctx context.Context, email, hash string) error {
 	}
 
 	return err
+}
+
+func (r *Repo) ReadUser(ctx context.Context, email string) (*User, error) {
+	var u User
+
+	err := r.pool.QueryRow(
+		ctx,
+		"SELECT id, email, role, password_hash FROM users WHERE email = $1",
+		email,
+	).Scan(
+		&u.ID,
+		&u.Email,
+		&u.Role,
+		&u.PasswordHash,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &u, nil
 }

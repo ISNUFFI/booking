@@ -10,15 +10,18 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/ISNUFFI/booking/internal/config"
 )
 
 type Handler struct {
 	service Service
+	config *config.Config
 }
 
-func NewHandler(pool *pgxpool.Pool) Handler {
+func NewHandler(pool *pgxpool.Pool, config *config.Config) Handler {
 	return Handler{
-		service: NewService(NewRepo(pool)),
+		service: NewService(NewRepo(pool), config),
 	}
 }
 
@@ -80,7 +83,43 @@ func (h Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "success")
 }
 
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (h Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	jwt, err := h.service.Login(r.Context(), req.Email, req.Password)
+	if err != nil {
+		log.Println("could not login: ", err)
+		http.Error(w, "invalid login", http.StatusUnauthorized)
+		return
+	}
+
+	type Response struct {
+		Token string `json:"token"`
+	}
+
+	resp := Response{Token: jwt}
+
+	response, err := json.Marshal(resp)
+	if err != nil {
+		log.Println("")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintln(w, string(response))
+}
+
 func (h Handler) AttachHandlers(router chi.Router) {
 	router.Post("/register", h.RegisterHandler)
-	// router.Post("/login", LoginHandler)
+	router.Post("/login", h.LoginHandler)
 }
