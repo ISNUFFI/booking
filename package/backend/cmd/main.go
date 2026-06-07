@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -34,6 +33,7 @@ func main() {
 		pr.Use(auth.JWTMiddleware([]byte(config.JWTSecret)))
 
 		// private endpoints
+		pr.Get("/me", authHandler.MeHandler)
 	})
 
 	log.Println("Server listening on ", config.AppAddress)

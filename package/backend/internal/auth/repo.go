@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	// "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -36,7 +36,31 @@ func (r *Repo) CreateUser(ctx context.Context, email, hash string) error {
 	return err
 }
 
-func (r *Repo) ReadUser(ctx context.Context, email string) (*User, error) {
+func (r *Repo) GetUserByID(ctx context.Context, id int) (*User, error) {
+	var u User
+
+	err := r.pool.QueryRow(
+		ctx,
+		"SELECT id, email, role, password_hash FROM users WHERE id = $1",
+		id,
+	).Scan(
+		&u.ID,
+		&u.Email,
+		&u.Role,
+		&u.passwordHash,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+func (r *Repo) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	var u User
 
 	err := r.pool.QueryRow(
@@ -47,7 +71,7 @@ func (r *Repo) ReadUser(ctx context.Context, email string) (*User, error) {
 		&u.ID,
 		&u.Email,
 		&u.Role,
-		&u.PasswordHash,
+		&u.passwordHash,
 	)
 
 	if err != nil {

@@ -25,24 +25,25 @@ func JWTMiddleware(secret []byte) func(http.Handler) http.Handler {
 
 			tokenStr := parts[1]
 
-			token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, http.ErrAbortHandler
-				}
-				return secret, nil
-			})
+			token, err := jwt.ParseWithClaims(
+				tokenStr, 
+				&JWTClaims{},
+				func(t *jwt.Token) (any, error) {
+					return secret, nil
+				},
+			)
 			if err != nil || !token.Valid {
 				http.Error(w, "invalid token", http.StatusUnauthorized)
 				return
 			}
 
-			claims, ok := token.Claims.(jwt.MapClaims)
+			claims, ok := token.Claims.(*JWTClaims)
 			if !ok {
 				http.Error(w, "invalid claims", http.StatusUnauthorized)
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), "user", claims)
+			ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

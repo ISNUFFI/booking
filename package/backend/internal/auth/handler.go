@@ -111,11 +111,34 @@ func (h Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := json.Marshal(resp)
 	if err != nil {
-		log.Println("")
+		log.Println(err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintln(w, string(response))
+}
+
+func (h Handler) MeHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(userIDKey).(int)
+
+	user, err := h.service.Me(r.Context(), userID)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+	}
+
+	response, err := json.Marshal(user)
+	if err != nil {
+		log.Println(err)
+		if errors.Is(err, ErrUserNotFound) {
+			http.Error(w, "user not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, string(response))
 }
 

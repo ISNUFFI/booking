@@ -42,12 +42,12 @@ func (s Service) Register(ctx context.Context, email, password string) error {
 }
 
 func (s Service) Login(ctx context.Context, email, password string) (string, error) {
-	user, err := s.repo.ReadUser(ctx, email)
+	user, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
 		return "", err
 	}
 
-	hash := user.PasswordHash
+	hash := user.passwordHash
 	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
 		return "", ErrInvalidPassword
@@ -64,4 +64,13 @@ func (s Service) Login(ctx context.Context, email, password string) (string, err
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(s.config.JWTSecret))
+}
+
+func (s Service) Me(ctx context.Context, userID int) (*User, error) {
+	user, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	return user, nil
 }
