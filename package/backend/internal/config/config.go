@@ -1,21 +1,21 @@
 package config
 
 import (
-	"os"
 	"log"
+	"os"
 )
 
 type Config struct {
-	AppAddress string
+	AppAddress  string
 	DatabaseURL string
-	JWTSecret string
+	JWTSecret   string
 }
 
 func Load() *Config {
-	return &Config {
-		AppAddress: getEnv("APP_ADDRESS"),
+	return &Config{
+		AppAddress:  getEnv("APP_ADDRESS"),
 		DatabaseURL: getEnv("DATABASE_URL"),
-		JWTSecret: getEnv("JWT_SECRET"),
+		JWTSecret:   getEnv("JWT_SECRET"),
 	}
 }
 

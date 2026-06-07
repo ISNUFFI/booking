@@ -5,20 +5,20 @@ import (
 	"errors"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ISNUFFI/booking/internal/config"
 )
 
 type Service struct {
-	repo Repo
+	repo   Repo
 	config *config.Config
 }
 
 func NewService(repo Repo, config *config.Config) Service {
 	return Service{
-		repo: repo,
+		repo:   repo,
 		config: config,
 	}
 }
@@ -57,7 +57,7 @@ func (s Service) Login(ctx context.Context, email, password string) (string, err
 		UserID: user.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-			IssuedAt: jwt.NewNumericDate(time.Now()),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 

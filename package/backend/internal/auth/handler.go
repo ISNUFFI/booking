@@ -16,7 +16,7 @@ import (
 
 type Handler struct {
 	service Service
-	config *config.Config
+	config  *config.Config
 }
 
 func NewHandler(pool *pgxpool.Pool, config *config.Config) Handler {
