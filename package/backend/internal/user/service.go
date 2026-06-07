@@ -12,7 +12,7 @@ type Service struct {
 }
 
 func NewService(repo Repo) Service {
-	return Service {
+	return Service{
 		repo: repo,
 	}
 }
@@ -31,11 +31,10 @@ func (s Service) Register(ctx context.Context, email, password string) error {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
-// func (s Service) Login(password string) (string, error) {
-// 	hash, err := s.repo.
-// 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-// }
+func (s Service) Login(password string) (string, error) {
+	return "", nil
+}

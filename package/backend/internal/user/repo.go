@@ -14,7 +14,7 @@ type Repo struct {
 }
 
 func NewRepo(pool *pgxpool.Pool) Repo {
-	return Repo {
+	return Repo{
 		pool: pool,
 	}
 }

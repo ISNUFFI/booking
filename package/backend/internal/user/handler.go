@@ -1,8 +1,8 @@
 package user
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,7 +17,7 @@ type Handler struct {
 }
 
 func NewHandler(pool *pgxpool.Pool) Handler {
-	return Handler {
+	return Handler{
 		service: NewService(NewRepo(pool)),
 	}
 }
@@ -37,13 +37,13 @@ func (e RegisterValidationError) Error() string {
 
 func (req RegisterRequest) Validate() error {
 	if _, err := mail.ParseAddress(req.Email); err != nil {
-		return RegisterValidationError {
+		return RegisterValidationError{
 			message: "invalid email",
 		}
 	}
 
 	if len(req.Password) < 10 {
-		return RegisterValidationError {
+		return RegisterValidationError{
 			message: "password is too short",
 		}
 	}
