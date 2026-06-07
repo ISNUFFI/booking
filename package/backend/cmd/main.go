@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	// "fmt"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/ISNUFFI/booking/internal/user"
+	"github.com/ISNUFFI/booking/internal/auth"
 	"github.com/ISNUFFI/booking/internal/config"
 )
 
@@ -27,8 +27,14 @@ func main() {
 	}
 	defer pool.Close()
 
-	userHandler := user.NewHandler(pool, config)
-	userHandler.AttachHandlers(r)
+	authHandler := auth.NewHandler(pool, config)
+	authHandler.AttachHandlers(r)
+
+	r.Group(func(pr chi.Router) {
+		pr.Use(auth.JWTMiddleware([]byte(config.JWTSecret)))
+
+		// private endpoints
+	})
 
 	log.Println("Server listening on ", config.AppAddress)
 	log.Fatal(http.ListenAndServe(config.AppAddress, r))
