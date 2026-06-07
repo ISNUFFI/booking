@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/ISNUFFI/booking/internal/model"
 )
 
 func JWTMiddleware(secret []byte) func(http.Handler) http.Handler {
@@ -26,7 +28,7 @@ func JWTMiddleware(secret []byte) func(http.Handler) http.Handler {
 			tokenStr := parts[1]
 
 			token, err := jwt.ParseWithClaims(
-				tokenStr, 
+				tokenStr,
 				&JWTClaims{},
 				func(t *jwt.Token) (any, error) {
 					return secret, nil
@@ -43,7 +45,7 @@ func JWTMiddleware(secret []byte) func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)
+			ctx := context.WithValue(r.Context(), model.UserIDKey, claims.UserID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

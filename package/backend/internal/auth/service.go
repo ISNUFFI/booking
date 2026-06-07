@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ISNUFFI/booking/internal/config"
+	"github.com/ISNUFFI/booking/internal/errs"
 )
 
 type Service struct {
@@ -31,8 +32,8 @@ func (s Service) Register(ctx context.Context, email, password string) error {
 
 	if err = s.repo.CreateUser(ctx, email, string(bytes)); err != nil {
 		switch {
-		case errors.Is(err, ErrDuplicateKey):
-			return ErrEmailAlreadyExists
+		case errors.Is(err, errs.ErrDuplicateKey):
+			return errs.ErrEmailAlreadyExists
 		default:
 			return err
 		}
@@ -50,7 +51,7 @@ func (s Service) Login(ctx context.Context, email, password string) (string, err
 	hash := user.passwordHash
 	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
-		return "", ErrInvalidPassword
+		return "", errs.ErrInvalidPassword
 	}
 
 	claims := JWTClaims{
@@ -64,13 +65,4 @@ func (s Service) Login(ctx context.Context, email, password string) (string, err
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(s.config.JWTSecret))
-}
-
-func (s Service) Me(ctx context.Context, userID int) (*User, error) {
-	user, err := s.repo.GetUserByID(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	
-	return user, nil
 }

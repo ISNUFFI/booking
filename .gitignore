@@ -2,3 +2,4 @@
 package/db/.pgdata
 package/db/.pgsocket
 package/db/log.txt
+package/db/test-data.sql

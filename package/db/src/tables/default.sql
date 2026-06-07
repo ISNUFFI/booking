@@ -1,2 +1,4 @@
 \ir users.sql
-\ir provider_schedules.sql
+\ir providers.sql
+\ir slots.sql
+\ir bookings.sql

@@ -12,6 +12,8 @@ import (
 
 	"github.com/ISNUFFI/booking/internal/auth"
 	"github.com/ISNUFFI/booking/internal/config"
+	"github.com/ISNUFFI/booking/internal/providers"
+	"github.com/ISNUFFI/booking/internal/users"
 )
 
 func main() {
@@ -29,11 +31,15 @@ func main() {
 	authHandler := auth.NewHandler(pool, config)
 	authHandler.AttachHandlers(r)
 
+	usersHandler := users.NewHandler(pool)
+	providersHandler := providers.NewHandler(pool)
+
 	r.Group(func(pr chi.Router) {
 		pr.Use(auth.JWTMiddleware([]byte(config.JWTSecret)))
 
 		// private endpoints
-		pr.Get("/me", authHandler.MeHandler)
+		usersHandler.AttachHandlers(pr)
+		providersHandler.AttachHandlers(pr)
 	})
 
 	log.Println("Server listening on ", config.AppAddress)

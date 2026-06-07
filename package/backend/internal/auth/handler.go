@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/ISNUFFI/booking/internal/config"
+	"github.com/ISNUFFI/booking/internal/errs"
 )
 
 type Handler struct {
@@ -71,7 +72,7 @@ func (h Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("could not register: ", err)
 		switch {
-		case errors.Is(err, ErrEmailAlreadyExists):
+		case errors.Is(err, errs.ErrEmailAlreadyExists):
 			http.Error(w, "email already exists", http.StatusConflict)
 		default:
 			http.Error(w, "internal error", http.StatusInternalServerError)
@@ -111,34 +112,11 @@ func (h Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := json.Marshal(resp)
 	if err != nil {
-		log.Println(err)
+		log.Println("could not marshal the response: ", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintln(w, string(response))
-}
-
-func (h Handler) MeHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(userIDKey).(int)
-
-	user, err := h.service.Me(r.Context(), userID)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
-	}
-
-	response, err := json.Marshal(user)
-	if err != nil {
-		log.Println(err)
-		if errors.Is(err, ErrUserNotFound) {
-			http.Error(w, "user not found", http.StatusNotFound)
-		} else {
-			http.Error(w, "internal error", http.StatusInternalServerError)
-		}
-	}
-
-	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, string(response))
 }
 
