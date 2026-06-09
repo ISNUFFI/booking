@@ -38,7 +38,7 @@ func (r *Repo) CreateUser(ctx context.Context, email, hash string) error {
 	return err
 }
 
-func (r *Repo) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+func (r *Repo) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	var u User
 
 	err := r.pool.QueryRow(
@@ -53,8 +53,8 @@ func (r *Repo) GetUserByEmail(ctx context.Context, email string) (*User, error) 
 	)
 
 	if err != nil {
-		return nil, err
+		return User{}, err
 	}
 
-	return &u, nil
+	return u, nil
 }

@@ -15,5 +15,13 @@ func NewService(repo Repo) Service {
 }
 
 func (s Service) CreateProvider(ctx context.Context, name, description string) (int, error) {
-	return s.repo.CreateProvider(ctx, name, description)
+	return s.repo.Create(ctx, name, description)
+}
+
+func (s Service) GetProvider(ctx context.Context, id int) (Provider, error) {
+	return s.repo.Get(ctx, id)
+}
+
+func (s Service) GetProvidersList(ctx context.Context) ([]Provider, error) {
+	return s.repo.GetList(ctx)
 }

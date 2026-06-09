@@ -4,7 +4,7 @@ CREATE TYPE user_role AS ENUM (
 );
 
 CREATE TABLE users (
-    id              BIGSERIAL                   PRIMARY KEY,
+    id              INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     email           TEXT                        NOT NULL UNIQUE,
     role            user_role                   NOT NULL DEFAULT 'user',
     password_hash   TEXT                        NOT NULL,

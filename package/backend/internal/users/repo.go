@@ -20,7 +20,7 @@ func NewRepo(pool *pgxpool.Pool) Repo {
 	}
 }
 
-func (r *Repo) GetUserByID(ctx context.Context, id int) (*User, error) {
+func (r *Repo) GetUserByID(ctx context.Context, id int) (User, error) {
 	var u User
 
 	err := r.pool.QueryRow(
@@ -36,10 +36,10 @@ func (r *Repo) GetUserByID(ctx context.Context, id int) (*User, error) {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errs.ErrUserNotFound
+			return User{}, errs.ErrUserNotFound
 		}
-		return nil, err
+		return User{}, err
 	}
 
-	return &u, nil
+	return u, nil
 }

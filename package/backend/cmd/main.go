@@ -28,8 +28,10 @@ func main() {
 	}
 	defer pool.Close()
 
-	authHandler := auth.NewHandler(pool, config)
-	authHandler.AttachHandlers(r)
+	r.Route("/auth", func(r chi.Router) {
+		authHandler := auth.NewHandler(pool, config)
+		authHandler.AttachHandlers(r)
+	})
 
 	usersHandler := users.NewHandler(pool)
 	providersHandler := providers.NewHandler(pool)
@@ -39,7 +41,15 @@ func main() {
 
 		// private endpoints
 		usersHandler.AttachHandlers(pr)
-		providersHandler.AttachHandlers(pr)
+
+		r.Route("/providers", func(r chi.Router) {
+			r.Get("/", providersHandler.GetListHandler)
+			r.Post("/", providersHandler.CreateHandler)
+
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", providersHandler.GetHandler)
+			})
+		})
 	})
 
 	log.Println("Server listening on ", config.AppAddress)
