@@ -25,9 +25,16 @@ func NewHandler(pool *pgxpool.Pool) Handler {
 }
 
 func (h Handler) MeHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(model.UserIDKey).(int)
+	ctx := r.Context()
 
-	user, err := h.service.Me(r.Context(), userID)
+	userID, ok := ctx.Value(model.UserIDKey).(int)
+	if !ok {
+		log.Println("User ID not found in the context")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	user, err := h.service.Me(ctx, userID)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
