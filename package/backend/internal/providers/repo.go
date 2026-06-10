@@ -18,13 +18,13 @@ func NewRepo(pool *pgxpool.Pool) Repo {
 	}
 }
 
-func (r *Repo) Create(ctx context.Context, name, description string) (int, error) {
+func (r *Repo) Create(ctx context.Context, name, description string, ownerID int) (int, error) {
 	var id int
 
 	err := r.pool.QueryRow(
 		ctx,
-		"INSERT INTO providers(name, description) VALUES ($1, $2) RETURNING id",
-		name, description,
+		"INSERT INTO providers(name, description, owner) VALUES ($1, $2, $3) RETURNING id",
+		name, description, ownerID,
 	).Scan(&id)
 
 	if err != nil {
@@ -38,9 +38,9 @@ func (r *Repo) Get(ctx context.Context, id int) (Provider, error) {
 	var p Provider
 	err := r.pool.QueryRow(
 		ctx,
-		"SELECT name, description FROM providers WHERE id = $1",
+		"SELECT name, description, owner FROM providers WHERE id = $1",
 		id,
-	).Scan(&p.Name, &p.Description)
+	).Scan(&p.Name, &p.Description, &p.Owner)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -55,7 +55,7 @@ func (r *Repo) Get(ctx context.Context, id int) (Provider, error) {
 func (r *Repo) GetList(ctx context.Context) ([]Provider, error) {
 	rows, err := r.pool.Query(
 		ctx,
-		"SELECT name, description FROM providers",
+		"SELECT name, description, owner FROM providers",
 	)
 	if err != nil {
 		return nil, err
@@ -69,4 +69,22 @@ func (r *Repo) GetList(ctx context.Context) ([]Provider, error) {
 	}
 
 	return providers, nil
+}
+
+func (r *Repo) Delete(ctx context.Context, id int) error {
+	res, err := r.pool.Exec(
+		ctx,
+		"DELETE FROM providers WHERE id = $1",
+		id,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if res.RowsAffected() == 0 {
+		return ErrProviderNotFound
+	}
+
+	return nil
 }

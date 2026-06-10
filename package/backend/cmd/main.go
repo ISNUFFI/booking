@@ -36,11 +36,11 @@ func main() {
 	usersHandler := users.NewHandler(pool)
 	providersHandler := providers.NewHandler(pool)
 
-	r.Group(func(pr chi.Router) {
-		pr.Use(auth.JWTMiddleware([]byte(config.JWTSecret)))
+	r.Group(func(r chi.Router) {
+		r.Use(auth.JWTMiddleware([]byte(config.JWTSecret)))
 
 		// private endpoints
-		usersHandler.AttachHandlers(pr)
+		usersHandler.AttachHandlers(r)
 
 		r.Route("/providers", func(r chi.Router) {
 			r.Get("/", providersHandler.GetListHandler)
@@ -48,6 +48,7 @@ func main() {
 
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", providersHandler.GetHandler)
+				r.Delete("/", providersHandler.DeleteHandler)
 			})
 		})
 	})

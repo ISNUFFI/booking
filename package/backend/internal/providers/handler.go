@@ -10,6 +10,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/ISNUFFI/booking/internal/model"
 )
 
 type Handler struct {
@@ -35,7 +37,16 @@ func (h Handler) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.service.CreateProvider(r.Context(), req.Name, req.Description)
+	ctx := r.Context()
+
+	userID, ok := ctx.Value(model.UserIDKey).(int)
+	if !ok {
+		log.Println("User ID not found in the context")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	id, err := h.service.CreateProvider(ctx, req.Name, req.Description, userID)
 	if err != nil {
 		log.Println("could not create a provider: ", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -106,5 +117,36 @@ func (h Handler) GetListHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, string(response))
 }
 
-func (h Handler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	userID, ok := ctx.Value(model.UserIDKey).(int)
+	if !ok {
+		log.Println("User ID not found in the context")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	err = h.service.DeleteProvider(ctx, id, userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrProviderOwnerMismatch):
+			http.Error(w, "forbidden", http.StatusForbidden)
+		case errors.Is(err, ErrProviderNotFound):
+			http.Error(w, "provider not found", http.StatusNotFound)
+		default:
+			http.Error(w, "internal error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
