@@ -86,9 +86,9 @@ func (h Handler) GetProviderSlotsHandler(w http.ResponseWriter, r *http.Request)
 }
 
 type CreateBulkRequest struct {
-	Start 			time.Time 	`json:"start"`
-	End 			time.Time 	`json:"end"`
-	DurationMinutes uint		`json:"duration_minutes"`
+	Start           time.Time `json:"start"`
+	End             time.Time `json:"end"`
+	DurationMinutes uint      `json:"duration_minutes"`
 }
 
 func (req CreateBulkRequest) Validate() error {

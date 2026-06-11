@@ -13,8 +13,8 @@ import (
 	"github.com/ISNUFFI/booking/internal/auth"
 	"github.com/ISNUFFI/booking/internal/config"
 	"github.com/ISNUFFI/booking/internal/providers"
-	"github.com/ISNUFFI/booking/internal/users"
 	"github.com/ISNUFFI/booking/internal/slots"
+	"github.com/ISNUFFI/booking/internal/users"
 )
 
 func main() {
