@@ -3,6 +3,7 @@ package slots
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -54,4 +55,48 @@ func (r *Repo) GetListByProvider(ctx context.Context, providerID int) ([]Slot, e
 	}
 
 	return slots, nil
+}
+
+func (r *Repo) CreateBulk(ctx context.Context, providerID int, start, end time.Time, duration time.Duration) error {
+	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	t := start
+
+	for t.Add(duration).Before(end) || t.Add(duration).Equal(end) {
+		newStart := t
+		newEnd := t.Add(duration)
+
+		var exists int
+		err := r.pool.QueryRow(
+			ctx, `
+			SELECT 1
+			FROM slots
+			WHERE provider_id = $1
+			  AND start_time < $3
+			  AND end_time > $2
+			LIMIT 1 `,
+			providerID, newStart, newEnd,
+		).Scan(&exists)
+
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				_, err = tx.Exec(
+					ctx,
+					"INSERT INTO slots(provider_id, start_time, end_time) VALUES($1, $2, $3)",
+					providerID, t, t.Add(duration),
+				)
+			}
+			if err != nil {
+				return err
+			}
+		}
+
+		t = t.Add(duration)
+	}
+
+	return tx.Commit(ctx)
 }

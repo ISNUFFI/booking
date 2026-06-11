@@ -15,10 +15,5 @@ func NewService(repo Repo) Service {
 }
 
 func (s Service) Me(ctx context.Context, userID int) (User, error) {
-	user, err := s.repo.GetUserByID(ctx, userID)
-	if err != nil {
-		return User{}, err
-	}
-
-	return user, nil
+	return s.repo.GetUserByID(ctx, userID)
 }

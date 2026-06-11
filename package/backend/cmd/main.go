@@ -53,6 +53,7 @@ func main() {
 				r.Delete("/", providersHandler.DeleteHandler)
 
 				r.Get("/slots", slotsHandler.GetProviderSlotsHandler)
+				r.Post("/slots/bulk", slotsHandler.CreateBulkHandler)
 			})
 		})
 
