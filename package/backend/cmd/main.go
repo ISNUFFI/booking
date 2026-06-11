@@ -14,6 +14,7 @@ import (
 	"github.com/ISNUFFI/booking/internal/config"
 	"github.com/ISNUFFI/booking/internal/providers"
 	"github.com/ISNUFFI/booking/internal/users"
+	"github.com/ISNUFFI/booking/internal/slots"
 )
 
 func main() {
@@ -31,6 +32,7 @@ func main() {
 	authHandler := auth.NewHandler(pool, config)
 	usersHandler := users.NewHandler(pool)
 	providersHandler := providers.NewHandler(pool)
+	slotsHandler := slots.NewHandler(pool)
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.RegisterHandler)
@@ -49,7 +51,13 @@ func main() {
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", providersHandler.GetHandler)
 				r.Delete("/", providersHandler.DeleteHandler)
+
+				r.Get("/slots", slotsHandler.GetProviderSlotsHandler)
 			})
+		})
+
+		r.Route("/slots", func(r chi.Router) {
+			r.Get("/{id}", slotsHandler.GetHandler)
 		})
 	})
 
