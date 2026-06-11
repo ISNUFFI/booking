@@ -28,19 +28,19 @@ func main() {
 	}
 	defer pool.Close()
 
-	r.Route("/auth", func(r chi.Router) {
-		authHandler := auth.NewHandler(pool, config)
-		authHandler.AttachHandlers(r)
-	})
-
+	authHandler := auth.NewHandler(pool, config)
 	usersHandler := users.NewHandler(pool)
 	providersHandler := providers.NewHandler(pool)
+
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/register", authHandler.RegisterHandler)
+		r.Post("/login", authHandler.LoginHandler)
+	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(auth.JWTMiddleware([]byte(config.JWTSecret)))
 
-		// private endpoints
-		usersHandler.AttachHandlers(r)
+		r.Get("/me", usersHandler.MeHandler)
 
 		r.Route("/providers", func(r chi.Router) {
 			r.Get("/", providersHandler.GetListHandler)

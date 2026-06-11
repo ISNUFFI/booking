@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/ISNUFFI/booking/internal/errs"
@@ -52,8 +51,4 @@ func (h Handler) MeHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, string(response))
-}
-
-func (h Handler) AttachHandlers(router chi.Router) {
-	router.Get("/me", h.MeHandler)
 }

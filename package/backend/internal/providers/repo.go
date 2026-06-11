@@ -55,7 +55,7 @@ func (r *Repo) Get(ctx context.Context, id int) (Provider, error) {
 func (r *Repo) GetList(ctx context.Context) ([]Provider, error) {
 	rows, err := r.pool.Query(
 		ctx,
-		"SELECT name, description, owner FROM providers",
+		"SELECT id, name, description, owner FROM providers",
 	)
 	if err != nil {
 		return nil, err
