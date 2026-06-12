@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/ISNUFFI/booking/internal/auth"
+	"github.com/ISNUFFI/booking/internal/bookings"
 	"github.com/ISNUFFI/booking/internal/config"
 	"github.com/ISNUFFI/booking/internal/providers"
 	"github.com/ISNUFFI/booking/internal/slots"
@@ -33,6 +34,7 @@ func main() {
 	usersHandler := users.NewHandler(pool)
 	providersHandler := providers.NewHandler(pool)
 	slotsHandler := slots.NewHandler(pool)
+	bookingsHandler := bookings.NewHandler(pool)
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.RegisterHandler)
@@ -59,6 +61,11 @@ func main() {
 
 		r.Route("/slots", func(r chi.Router) {
 			r.Get("/{id}", slotsHandler.GetHandler)
+		})
+
+		r.Route("/bookings", func(r chi.Router) {
+			r.Get("/{id}", bookingsHandler.GetHandler)
+			r.Get("/me", bookingsHandler.GetMeHandler)
 		})
 	})
 
