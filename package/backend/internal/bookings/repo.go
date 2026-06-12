@@ -20,7 +20,7 @@ func NewRepo(pool *pgxpool.Pool) Repo {
 	}
 }
 
-func (r *Repo) GetByID(ctx context.Context, bookingID int) (Booking, error) {
+func (r *Repo) GetBookingByID(ctx context.Context, bookingID int) (Booking, error) {
 	var b Booking
 	err := r.pool.QueryRow(
 		ctx,
@@ -40,7 +40,7 @@ func (r *Repo) GetByID(ctx context.Context, bookingID int) (Booking, error) {
 	return b, nil
 }
 
-func (r *Repo) GetListByUserID(ctx context.Context, userID int) ([]Booking, error) {
+func (r *Repo) GetBookingsByUserID(ctx context.Context, userID int) ([]Booking, error) {
 	rows, err := r.pool.Query(
 		ctx,
 		"SELECT id, slot_id, created_at FROM bookings WHERE user_id = $1",
@@ -60,15 +60,18 @@ func (r *Repo) GetListByUserID(ctx context.Context, userID int) ([]Booking, erro
 	return bookings, nil
 }
 
-func (r *Repo) Create(ctx context.Context, slotID, userID int) (int, error) {
-	var id int
+func (r *Repo) CreateBooking(ctx context.Context, slotID, userID int) (int, error) {
+	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
 
-	err := r.pool.QueryRow(
-		ctx,
+	var id int
+	err = tx.QueryRow(ctx,
 		"INSERT INTO bookings(slot_id, user_id) VALUES ($1, $2) RETURNING id",
 		slotID, userID,
 	).Scan(&id)
-
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
@@ -79,27 +82,52 @@ func (r *Repo) Create(ctx context.Context, slotID, userID int) (int, error) {
 				return 0, ErrSlotDoesNotExist
 			}
 		}
-
 		return 0, err
 	}
 
-	return id, nil
+	tag, err := tx.Exec(ctx,
+		`UPDATE slots SET is_active = false 
+		 WHERE id = $1 AND is_active = true`,
+		slotID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	if tag.RowsAffected() == 0 {
+		return 0, ErrSlotAlreadyTaken
+	}
+
+	return id, tx.Commit(ctx)
 }
 
-func (r *Repo) Delete(ctx context.Context, bookingID int) error {
-	res, err := r.pool.Exec(
-		ctx,
-		"DELETE FROM bookings WHERE id = $1",
-		bookingID,
-	)
+func (r *Repo) DeleteBooking(ctx context.Context, bookingID int) error {
+	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
 
+	var slotID int
+	err = tx.QueryRow(ctx,
+		"DELETE FROM bookings WHERE id = $1 RETURNING slot_id",
+		bookingID,
+	).Scan(&slotID)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrBookingNotFound
+		}
+
+		return err
+	}
+
+	_, err = tx.Exec(ctx,
+		"UPDATE slots SET is_active = true WHERE id = $1",
+		slotID,
+	)
 	if err != nil {
 		return err
 	}
 
-	if res.RowsAffected() == 0 {
-		return ErrBookingNotFound
-	}
-
-	return nil
+	return tx.Commit(ctx)
 }
