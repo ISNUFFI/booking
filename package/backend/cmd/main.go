@@ -66,6 +66,10 @@ func main() {
 		r.Route("/bookings", func(r chi.Router) {
 			r.Get("/{id}", bookingsHandler.GetHandler)
 			r.Get("/me", bookingsHandler.GetMeHandler)
+
+			r.Post("/", bookingsHandler.CreateHandler)
+
+			r.Delete("/{id}", bookingsHandler.DeleteHandler)
 		})
 	})
 
